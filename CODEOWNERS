@@ -1,0 +1,9 @@
+# Code owners for the dev kit.
+#
+# ADVISORY, for now. Branch protection on `main` does not have "Require review from Code Owners"
+# enabled, so GitHub will request these reviews but will not block a merge on them. Enabling that
+# is a repository-settings change and is tracked separately — don't assume this file enforces.
+#
+# Syntax: https://docs.github.com/articles/about-code-owners
+
+*   @aboutte @gk-duplo
