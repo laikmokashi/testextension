@@ -11,7 +11,9 @@
       "@angular/common": "$@angular/common",
       "@angular/core": "$@angular/core"
     },
-    "esbuild": "0.28.1"
+    "esbuild": "0.28.1",
+    "dompurify": "3.4.13",
+    "@hono/node-server": "^2.0.5"
   },
   "dependencies": {
     "@angular-architects/native-federation": "^22.0.6",
