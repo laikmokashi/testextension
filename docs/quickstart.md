@@ -24,8 +24,8 @@ docker --version && docker compose version
 1. Clone the dev kit.
 
    ```bash
-   git clone https://github.com/duplocloud/devkit my-extension
-   cd my-extension
+   git clone https://github.com/duplocloud/devkit my-agent
+   cd my-agent
    ```
 
 2. Adopt the clone and seed your first extension.
@@ -58,7 +58,7 @@ You cannot file a ticket yet — a ticket requires a scope, which step 4 creates
 
 ## 3. Create an AWS access key
 
-In the AWS console:
+In your AWS console:
 
 1. **IAM** → **Users** → **Create user**.
 2. **User name**: `duplocloud-devkit`.
@@ -75,7 +75,7 @@ In the AWS console:
 Provider, credential and scope are **one wizard**: app switcher (top left, reads **AI DevOps**) →
 **AI Admin** → **Providers** (sidebar) → **IT** → **Cloud** tab → **Add** (top right). The page is
 headed **Add Provider**, with a rail on the right listing **Provider Details** → **Credentials** →
-**Scope**. Steps a, b and c are those three. Do not leave the wizard between them.
+**Scope**. Steps a, b and c are those three.
 
 ### a. Provider
 
@@ -102,7 +102,7 @@ Step 2, **Credentials**:
 | **Access Key ID** | `<your AWS access key ID>` |
 | **Password** | `<your AWS secret access key>` |
 
-The secret really does go in the field labelled **Password**. → **Next**.
+The secret goes in the field labelled **Password**. → **Next**.
 
 ![Step 2 of the Add Provider wizard, Credentials, with Credential Type set to Access Key](images/devkit-provider-credential.png)
 
@@ -131,8 +131,7 @@ App switcher → **AI DevOps**, then:
    List all S3 buckets in this account.
    ```
 
-3. Leave the model selector at the bottom right of the box alone — already set, e.g.
-   `claude-sonnet-4-6 (Direct Anthropic)`, sub-line `SDK: local-agent`. No agent field.
+3. Leave the model selector at the bottom right of the box alone — already set.
 4. **Select Scopes** → **`aws-readonly`** (badged `aws`). **Required** — **Create Ticket** stays
    disabled until the box has both text and a scope.
 5. **Create Ticket**.
@@ -151,8 +150,6 @@ The agent runs the command and replies with a table of your buckets — Bucket N
 
 ![The agent's reply: a table of the account's S3 buckets](images/devkit-ticket-answer-aws.png)
 
-An empty list is only a pass if you genuinely have no buckets.
-
 **That is your first ticket, and it verifies your AWS credentials end to end.** The platform is running,
 the agent is wired to your LLM, and the scope you built in step 4 reached a real AWS account and came
 back with real data. Everything from here builds on a loop that already works.
@@ -160,7 +157,7 @@ back with real data. Everything from here builds on a loop that already works.
 ## 6. Build your first AI App
 
 The agent answering questions is half of the dev kit. The other half is that you can add your own
-**first-class resource types** to the platform — your own form, your own list and detail views, your
+Agents to the platform — your own form, your own list and detail views, your
 own provisioning — and hot-load them into the stack you already have running, with no restart.
 
 You do not write that by hand. `/duplo-extension` in Claude Code interviews you, plans it, and builds
@@ -175,7 +172,7 @@ Leave the browser open — you will come back to it. In VS Code or a terminal, g
 cloned in step 2:
 
 ```bash
-cd my-extension
+cd my-agent
 ```
 
 Start Claude Code there. It picks up the `.claude/` directory in this repo, which is what makes the
@@ -201,7 +198,7 @@ Next it asks what you want to build, as a set of options with **Other** at the b
 the offered options are starting points, and you are going to supply the whole thing — then paste the
 block below into the free-text box.
 
-Use this rather than inventing something. It answers everything the intake would otherwise ask you one
+It answers everything the intake would otherwise ask you one
 question at a time, so the command goes almost straight to a plan:
 
 ```text
@@ -312,27 +309,19 @@ built-in resource types.
 Create one. Type a domain you know — your own company's is the interesting one — leave the rest at
 their defaults, and save.
 
-> **SCREENSHOT — the input.** The Domain Lookup create form: the **Domain** text box filled in, the
-> **Lookup source** radio group on Auto, **Expiry warning threshold** at 30, the **Include raw
-> response** toggle on, laid out in the three-column panel form.
->
-> <!-- ![The Domain Lookup create form with a domain entered](images/devkit-whois-create-form.png) -->
+![The Domain Lookup create form with a domain entered](images/devkit-whois-create-form.png)
 
 Provisioning opens a ticket, the agent looks the domain up over RDAP, and the resource goes to
 **Complete** in seconds. Open it: the registrar, the expiry date, the name servers, the DNSSEC flag and
 the status codes are each their own field, laid out across the Overview, DNS and Contact tabs — because
 you specified them as first-class result fields, not because anyone hand-wrote that page.
 
-> **SCREENSHOT — the output.** The detail view of a completed lookup, on the **Overview** tab, showing
-> Availability, Registrar, the registration and expiry dates, and Days until expiry as separate fields.
->
-> <!-- ![The result view of a completed lookup, showing the registration facts as typed fields](images/devkit-whois-result-overview.png) -->
+![The result view of a completed lookup, showing the registration facts as typed fields](images/devkit-whois-result-overview.png)
 
-> **SCREENSHOT — the structured fields.** The **DNS** tab of the same lookup, with the name servers as a
-> table and the EPP status codes as pills — the clearest evidence that the result is typed data, not
-> WHOIS text.
->
-> <!-- ![The DNS tab showing name servers as a table and status codes as pills](images/devkit-whois-result-dns.png) -->
+The **DNS** tab is the clearest evidence that the result is typed data rather than WHOIS text: the name
+servers are a real table and the EPP status codes are pills.
+
+![The DNS tab showing name servers as a table and status codes as pills](images/devkit-whois-result-dns.png)
 
 Try a domain nobody has registered, too. RDAP answers 404, and the lookup completes with
 **Availability: Available** rather than failing.

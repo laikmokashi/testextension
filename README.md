@@ -3,20 +3,11 @@
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
 [![Release](https://img.shields.io/github/v/release/duplocloud/devkit?label=release)](https://github.com/duplocloud/devkit/releases)
 
-> **Separate terms govern part of this repository.** The container images and the DuploCloud UI
-> library are licensed pursuant to the [TERMS](TERMS.md), not the Apache Software License 2.0
-> (as described in the [LICENSE](LICENSE) file). Those TERMS include an agreement to arbitrate
-> and a class action waiver.
-
-Run the DuploCloud AI HelpDesk platform on your laptop from published images — then build your own
-**AI App** against it. Each AI App you write ships a backend, a UI, and its own provisioning, and
+Run the DuploCloud AI HelpDesk platform on your laptop via Docker — then build your own
+**Agent** against it. Each Agent you write ships a backend, a UI, and its own provisioning, and
 hot-loads into the running platform with no restart.
 
 ![The DuploCloud platform running locally, with the New Extension form filled in](docs/images/devkit-new-extension.png)
-
-That is the real platform, on `localhost:4210`, after `./run.sh` — sidebar, workspace selector, and all.
-The form above is Extension Studio: describe the resource you want, and an agent builds the backend, the
-UI, and the provisioning skill, then hot-loads it into the running platform.
 
 ## Why you'd want it
 
@@ -24,46 +15,33 @@ UI, and the provisioning skill, then hot-loads it into the running platform.
 - **Your own resource types.** Not plugins bolted on the side — they get a REST API, a portal UI, and a
   provisioning workflow, exactly like the built-in types.
 - **Hot-load, no restart.** Build, deploy, and the new type is live in the UI seconds later.
-- **AI-guided authoring.** `/duplo-extension` in Claude Code scaffolds and builds an AI App from a
+- **AI-guided authoring.** `/duplo-extension` in Claude Code scaffolds and builds an Agent from a
   plain-language requirement.
 
 ## Quick start
 
-You need **Docker with Compose v2**, **Python 3** (`python3` on your `PATH` — `run.sh` and the scripts
-under `scripts/` use it to edit `.env` and to read JSON API responses), and **an LLM key** — Anthropic,
-Azure, or AWS Bedrock. `./run.sh` checks for Docker and Python before it does anything else and tells you
-what is missing.
+You need **Docker with Compose v2**, **Python 3**, and **an LLM key** — Anthropic, or AWS Bedrock.
 
 ```bash
-git clone https://github.com/duplocloud/devkit my-extension && cd my-extension
+git clone https://github.com/duplocloud/devkit my-agent && cd my-agent
 ./run.sh
 ```
 
 First run asks for an admin **email** — use your **work address**, personal domains (gmail.com, …) are not
 accepted — and DuploCloud emails you a **verification link**. Click it and the run continues on its own, then
 asks for a **password** and an **LLM provider** and brings the stack up, registering your chosen provider's
-model as the **System default LLM**, so the ticket LLM picker works whichever provider you picked. Sign in at
+model as the **System default LLM**. Sign in at
 **<http://localhost:4210>**.
 
 That is the platform up. To make it *do* something, pick one:
 
-→ **[Quickstart](docs/quickstart.md)** — connect an AWS account: a read-only access key, then a
-provider, a credential, and a scope. You end up able to ask the agent real questions about that
-account — "list all S3 buckets" — and get real answers back.
+→ **[Quickstart](docs/quickstart.md)** — connect an AWS account with a read-only access key and ask the
+agent real questions about it — "list all S3 buckets" — then build your first Agent: a domain whois lookup
+that hot-loads into the platform you just started.
 
 → **[Getting started](docs/getting-started/README.md)** — the full path, one page at a time: adopting the
-repo, connecting AWS and Kubernetes, and authoring and deploying your first AI App.
-
-> **Running on EC2? No keys needed.** Before asking for a key, `./run.sh` checks whether this host is an EC2
-> instance whose IAM role can actually invoke Bedrock — it makes a real (1-token) Converse call, then checks
-> that containers can reach IMDS too. If the role works, the provider menu gains a third option that uses it
-> directly, storing **no** credentials in `.env`: `./run.sh --model bedrock-instance-role` (or pick 3 at the
-> prompt). Run the check on its own with `./scripts/detect-bedrock.sh` — it needs only `python3` and `curl`
-> (no AWS CLI, no boto3). If the role works on the host but a container is **proven** unable to reach IMDS,
-> the option is withheld: that's the IMDSv2 hop limit, so raise it with
-> `aws ec2 modify-instance-metadata-options --instance-id <id> --http-put-response-hop-limit 2`. If the
-> container check merely couldn't run (Docker not installed yet, daemon down, `busybox` unpullable) the
-> option is still offered, flagged as unverified.
+repo, connecting AWS and Kubernetes, then building **s3-guard** — an Agent that scans every bucket in a
+region against six security rules, charts the violations over time, and fixes the ones you tick.
 
 ## What you get
 
@@ -73,7 +51,7 @@ repo, connecting AWS and Kubernetes, and authoring and deploying your first AI A
 | `.env` / `.env.example` | Image tags, auth, LLM credentials, and the build target |
 | `run.sh` `stop.sh` `logs.sh` | Lifecycle |
 | `scripts/` | Build, deploy, register, and upgrade |
-| `samples/` | Worked reference extensions |
+| `samples/` | Worked reference Agents |
 | `.claude/` | The `/duplo-extension` authoring command, its skill, and 16 reference guides |
 | `extensions/terraform/` | The real, shipping **Terraform extension** — source, fetched once by `run.sh`, disconnected from git and yours to modify |
 | `extensions/<name>/` | **Yours** (subject to our and any third party's rights in the underlying software and technology upon which they are built). The one thing an upgrade never touches |
@@ -104,13 +82,13 @@ guides.
   `packages/` is the compiled DuploCloud platform UI library
   (`@duplocloud-internal/ng-common-lib`) — proprietary DuploCloud IP, **not open source**,
   and **not covered by the Apache License** despite living under `samples/`. You may build
-  your extensions against it and ship the parts your build bundles into a compiled
-  extension; you may not republish, repackage, or modify it. See [TERMS.md](TERMS.md)
+  your Agents against it and ship the parts your build bundles into a compiled
+  Agents; you may not republish, repackage, or modify it. See [TERMS.md](TERMS.md)
   and the `NOTICE` beside each tarball.
 - **This kit is for local development only.** As more fully described in the
   [TERMS](TERMS.md), the closed source materials are provided for non-production use only.
 - **Going to production?** Contact **sales@duplocloud.net** for a production license.
-- **Your extensions are yours.** DuploCloud claims no rights in anything you write under
+- **Your Agents are yours.** DuploCloud claims no rights in anything you write under
   `extensions/`. See [NOTICE](NOTICE) for the full breakdown.
 
 ## Policies
