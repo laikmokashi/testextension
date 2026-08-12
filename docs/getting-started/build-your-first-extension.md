@@ -26,14 +26,19 @@ give it a name, an AWS region, the scope to scan with, and optionally a bucket t
 — and provisioning does the work:
 
 - **The scan.** Using the scope's AWS credentials, it inspects every S3 bucket in that region and
-  checks each one against six rules: Block Public Access not fully enabled, a policy or ACL allowing
-  public read or public write, default encryption off, versioning off, server access logging off, and
-  TLS not enforced. Each rule carries a severity, from Critical down to Low. The results are stored on
-  the resource rather than re-read live on every page load, and every run appends a summary snapshot.
+  checks each one against these rules: Block Public Access not fully enabled, a policy or ACL allowing
+  public read or public write (reported separately, so the dashboards show seven rows), default
+  encryption off, versioning off, server access logging off, and TLS not enforced. Each rule carries a
+  severity, from Critical down to Low. The results are stored on the resource rather than re-read live
+  on every page load, and every run appends a summary snapshot.
 
-- **The dashboard.** The scan's detail page: how many buckets were scanned, how many are clean, how
-  many have at least one violation, a count per rule, and a chart of violations over time — which is
-  what those snapshots are for. Below it, a table of only the buckets that failed something.
+- **The Overview.** The estate-wide dashboard, across every scan you have: totals, a count per rule,
+  a table of all your scans, and a chart of posture over time — which is what those snapshots are for.
+  This is the top of the feature, and it is deliberately not per-scan: one scan only ever shows one
+  region, and the question worth asking is whether the whole account is getting better.
+
+- **The scan detail page.** One region: how many buckets were scanned, how many are clean, how many
+  have at least one violation, a count per rule, and a table of only the buckets that failed something.
 
 - **The per-bucket detail view.** Click a failing bucket and you get every violation it has, what was
   found, why it matters, and an action plan describing the exact remediation for each one.
@@ -42,8 +47,10 @@ give it a name, an AWS region, the scope to scan with, and optionally a bucket t
   applies the fix for the ticked ones, re-scans that bucket, and updates its result. Read [4.4](#44-give-it-the-specification)
   before you press it.
 
-There can be several scans — one per region, re-run over time — so they are listed under their own
-**S3 Guard** group in the left navigation.
+There can be several scans — one per region, re-run over time — so they live under their own **S3 Guard**
+group in the left navigation, with **Overview** and **Security Scans** in it.
+
+![The S3 Guard group open in the left navigation, showing Overview and Security Scans](../images/s3guard-nav.png)
 
 You do not write any of this by hand. `/duplo-extension` interviews you, plans it, and builds it.
 
@@ -70,7 +77,7 @@ Leave the browser tab open; you come back to it in [4.6](#46-see-it-in-the-porta
 
 ## 4.3 Run `/duplo-extension`
 
-```
+```text
 /duplo-extension
 ```
 
@@ -101,9 +108,10 @@ almost straight to a plan.
 Build an extension called s3-guard: a security posture dashboard for S3 buckets.
 
 Use the AWS scope attached to the dev workspace for testing — if the scope name I give you
-doesn't exist, just use the one that's there, don't stop to ask. Note that Remediate needs S3
-write permissions: with read-only credentials scanning works fine and every Remediate comes
-back AccessDenied. That's the expected result, not a bug to chase.
+doesn't exist, just use the one that's there, don't stop to ask. Remediate needs S3 write
+permissions. If the scope is read-only every Remediate comes back AccessDenied, which is a
+result to display per rule, not a bug to chase — but don't assume the scope is read-only
+either. Report what actually happens, and tell me if a Remediate really changes a bucket.
 
 One resource type, "S3 Security Scan". The spec is a name, an AWS region, the scope to scan
 with, and an optional log target bucket. Provisioning uses the scope's AWS credentials to
@@ -119,28 +127,53 @@ inspect every S3 bucket in that region and check it against these rules:
 Severity per rule: public read/write are Critical, Block Public Access and TLS are High,
 encryption is Medium, versioning and logging are Low.
 
+Get the evidence right, not just the verdict. A bucket with no policy at all is a different
+finding from a bucket whose policy lacks the deny, and each rule should say what was actually
+observed. A bucket whose configuration can't be fully read should say so rather than silently
+passing.
+
 This is deterministic work — do it in a background worker, not an agent skill.
 
 The result records, per bucket, which rules it fails. Store the results on the resource rather
-than rescanning live on every page load, and have each run append a summary snapshot so the
-dashboard can show progress over time.
+than rescanning live on every page load, and have each run append a summary snapshot.
 
-Put it in a new top-level nav group called "S3 Guard".
+Put it in a new top-level nav group called "S3 Guard" with two items: Overview and Security
+Scans.
 
-There can be several scans (one per region, re-run over time), so the nav lists the scans and
-each scan's detail page is the dashboard: total buckets scanned, how many are clean, how many
-have at least one violation, a count per rule, and a chart of violations over time. Below that,
-a table of only the buckets that failed something — bucket name, region, number of violations,
-worst severity.
+Overview is the top-level dashboard and it is where the charts live. It aggregates across ALL
+scans, not one: total buckets scanned, clean, and with at least one violation; a count per
+rule; how many scans across how many regions; and a chart of posture over time for the whole
+estate. Below that, a table of every scan — name, region, status, last scanned, buckets,
+buckets with violations — that clicks through to the scan.
+
+The estate timeline has to combine scans that are sampled at different times: one region might
+re-scan hourly while another re-scans weekly. At each point in time, every scan contributes its
+most recent snapshot at or before that moment, and those are summed. Do not just plot snapshots
+in the order they arrive — that makes the estate look like it collapses to one region's size
+every time a single scan re-runs. Each point should also carry how many scans were contributing,
+so a step up in the total reads as "another scan started reporting" rather than "the estate grew".
+
+Serve that aggregate from its own backend endpoint. Don't roll it up in the browser from the
+list response — the list carries every bucket finding of every scan, which is tens of kB per
+scan and grows with the estate, and the chart needs none of it.
+
+Security Scans lists the scans. A scan's detail page covers that region only: total buckets
+scanned, how many are clean, how many have at least one violation, a count per rule, and a
+table of only the buckets that failed something — bucket name, region, number of violations,
+worst severity. No chart on this page; a single scan's history is one region's slice, and the
+trend question belongs at the estate level.
 
 Clicking a bucket opens a detail view for that bucket showing every violation with what was
 found and why it matters, and an action plan describing the exact remediation for each one.
 Each violation is a checkbox, all ticked by default, and there is a Remediate button. Remediate
-applies the fix for only the ticked violations, then re-scans that bucket and updates its result.
+applies the fix for only the ticked violations, then re-scans that bucket and updates its
+result, and shows the outcome of each rule it attempted.
 
 Server access logging can't be turned on without a destination bucket. If the log target bucket
 is set, remediate it; if it's blank, still report the violation but disable its checkbox and say
 why. Don't auto-create a log bucket.
+
+Scans can be re-run on demand, and re-running is what extends the trend.
 
 Use chart.js for the charts. Build the frontend on whatever stack the current dev-kit template
 ships — don't carry one over from an older dev-kit.
@@ -150,14 +183,16 @@ Deleting a scan tears nothing down, and never reverts a remediation.
 Keep it to this one resource type. Do not add a parent-child hierarchy.
 ```
 
-> **Remediate will not work, and that is the expected result.** The IAM user you created on
-> [page 2](connect-aws.md#21-create-an-iam-user-and-access-key) has `ReadOnlyAccess`. The scan reads
-> every bucket's configuration, so the dashboard, the per-bucket detail, the violations and the action
-> plans all work — but nothing that credential holds can change a bucket, so pressing **Remediate**
-> returns `AccessDenied`. That is not a bug and there is nothing to chase. To make **Remediate** work,
-> give that IAM user write access to the buckets you want to fix, or attach a second, more privileged
-> scope and scan with that one instead. Read-only is the safer default for a machine you have just set
-> up, which is why page 2 chose it.
+> **Remediate needs write access, and the scope from page 2 does not have it.** The IAM user you
+> created on [page 2](connect-aws.md#21-create-an-iam-user-and-access-key) has `ReadOnlyAccess`. The
+> scan only reads bucket configuration, so the Overview, the scan pages, the per-bucket detail, the
+> violations and the action plans all work on read-only credentials. **Remediate** is the one thing that
+> writes, so with that scope each ticked rule comes back `AccessDenied` — shown against the rule it
+> belongs to. That is the credential refusing, not the extension failing, and there is nothing to chase.
+> To make **Remediate** actually apply, give that IAM user write access to the buckets you want to fix,
+> or attach a second, more privileged scope and scan with that one instead. Read-only is the safer
+> default for a machine you have just set up, which is why page 2 chose it — and if you do point
+> `s3-guard` at a scope that can write, remember that pressing **Remediate** changes real buckets.
 
 ## 4.5 Approve the plan
 
@@ -176,8 +211,8 @@ Claude Code does not start building from the paste. It works through the rest of
 
 4. **Then it presents one plan.** Not a plan per file — one, covering the whole build: a table of spec
    fields, a table of result fields, a walkthrough of the UI (where it lands in the left nav, the
-   create form, the list, the detail view), the files it will create under `extensions/s3-guard/`, and
-   the exact build and deploy commands it intends to run.
+   create form, the list, the Overview and the scan detail), the files it will create under
+   `extensions/s3-guard/`, and the exact build and deploy commands it intends to run.
 
 Read that plan; it is your one chance to change the shape before anything is written. Then approve it
 **once**. Approving covers the whole build, which is the point — the alternative is a permission prompt
@@ -201,15 +236,42 @@ that symptom is in [troubleshooting.md](../troubleshooting.md#extensions).
 1. Go back to the browser and **reload the tab**. The left navigation is built when the portal loads,
    so a tab that was open through the deploy will not show the new group until you do.
 
-2. **S3 Guard** is now a top-level group in the left nav, alongside the built-in sections, with your
-   scans listed under it.
+2. **S3 Guard** is now a top-level group in the left nav, alongside the built-in sections, with
+   **Overview** and **Security Scans** in it.
 
-3. Create a scan. Fill in the name and the AWS region you want to look at, select the `aws-readonly`
-   scope, and leave the log target bucket blank unless you have a bucket to send access logs to.
+3. Open **Security Scans** and press **Create Scan**. Fill in the name and the AWS region you want to
+   look at, select the `aws-readonly` scope, and leave the log target bucket blank unless you have a
+   bucket to send access logs to.
 
-4. Provisioning runs the scan in the background. When it completes, open the scan and its detail page
-   is the dashboard: the totals, the per-rule counts, the chart, and the table of buckets that failed
-   something. Click one of those buckets for its violations and its action plan.
+   ![The Create S3 Security Scan form, with name, AWS region, AWS scope and an optional log target bucket](../images/s3guard-create-form.png)
+
+4. Provisioning runs the scan in the background — no ticket and no agent, just a background worker, so
+   the row moves from `New` to `Complete` on its own. A region with a few dozen buckets takes a minute
+   or two.
+
+   ![The Security Scans list, with two completed scans covering us-east-1 and us-west-2](../images/s3guard-scans-list.png)
+
+5. Open the scan. Its detail page covers that one region: the totals, the per-rule counts, and the
+   table of buckets that failed something.
+
+   ![A scan's detail page for us-east-1: 35 buckets scanned, 0 clean, 35 with violations, counts per rule, and the table of failing buckets](../images/s3guard-scan-detail.png)
+
+6. Click one of those buckets. Every violation it has is listed with what was found, why it matters and
+   the exact remediation — each one a checkbox, ticked by default. The greyed-out row is the design
+   working: server access logging cannot be enabled without a destination bucket, so with no log target
+   set on the scan the violation is still reported but its checkbox is disabled and it says why.
+
+   ![A bucket's detail page showing two violations, the TLS one ticked and the logging one disabled with its reason, and a Remediate button](../images/s3guard-bucket-detail.png)
+
+7. Now go to **Overview**. This is the estate-wide picture across every scan you have created — totals,
+   violations by rule, the table of scans, and posture over time.
+
+   ![The S3 Guard Overview: 131 buckets across 2 scans in 2 regions, a stepped chart of posture over time, violations by rule, and the by-scan table](../images/s3guard-overview.png)
+
+   The chart only becomes interesting once there is more than one data point, so create a second scan in
+   another region, or press **Re-scan** on one you already have, and come back. Each scan contributes
+   its most recent result at every point in time, which is why the line steps up when a second region
+   first reports rather than replacing the first region's figure.
 
 Nothing is scanned until you create a scan — an empty **S3 Guard** group straight after the deploy is
 the extension working, not failing.
