@@ -176,7 +176,7 @@ cd my-agent
 ```
 
 Start Claude Code there. It picks up the `.claude/` directory in this repo, which is what makes the
-`/duplo-extension` command and its authoring skill available.
+`/duplo-extension` command and its authoring skill available. If prompted, choose `Yes, I trust this folder`.
 
 ### b. Run the command
 
