@@ -109,7 +109,7 @@ The secret goes in the field labelled **Password**. → **Next**.
 ### c. Scope
 
 Step 3, **Scope**. Set **Name** to `aws-readonly`, leave **Description** and the MCP Server selection
-alone → **Create**.
+alone and select your default region → **Create**.
 
 ### d. Attach the scope to the workspace
 
