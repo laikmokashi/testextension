@@ -20,7 +20,8 @@ hot-loads into the running platform with no restart.
 
 ## Quick start
 
-You need **Docker with Compose v2**, **Python 3**, and **an LLM key** — Anthropic, or AWS Bedrock.
+You need **Docker with Compose v2**, **Python 3**, and access to an LLM. `./run.sh` prompts for
+Anthropic or AWS Bedrock.
 
 ```bash
 git clone https://github.com/duplocloud/devkit my-agent && cd my-agent

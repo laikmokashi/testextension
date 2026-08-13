@@ -3,7 +3,7 @@
 **What you'll do:** Clone the dev kit, adopt it as your own repo, bring the platform up with
 `./run.sh`, verify your email, and sign in.
 
-**What you need first:** [0. Prerequisites](prerequisites.md) — Docker with Compose v2, Python 3, an LLM key, and a
+**What you need first:** [0. Prerequisites](prerequisites.md) — Docker with Compose v2, Python 3, LLM access, and a
 work email address you can read right now.
 
 ---
@@ -132,7 +132,7 @@ already set, so a second run is silent.
 | Prompt | What to enter |
 | --- | --- |
 | `Admin password:` | Your portal password. Not echoed. Remember it — the database keeps it, and a later `.env` edit cannot change it. |
-| `Select LLM provider:` → `Enter 1 or 2:` | `1` for `anthropic`, `2` for `bedrock`. |
+| `Select LLM provider:` → `Enter 1 or 2:` | `1` for `anthropic (API key)`, `2` for `bedrock (AWS keys)`. On an EC2 instance with a working Bedrock role, option `3` uses that role with no keys. |
 | `Anthropic API key:` *(provider 1)* | Your `sk-ant-…` key. Not echoed. |
 | `AWS access key id:` / `AWS secret access key:` *(provider 2)* | Your Bedrock credentials. |
 | `Opt out of usage metrics? [y/N]:` | Enter keeps you opted **in**. `y` opts out. |
@@ -141,12 +141,16 @@ The provider menu prints exactly this:
 
 ```
 Select LLM provider:
-  1) anthropic
-  2) bedrock
+  1) anthropic (API key)
+  2) bedrock (AWS keys)
 Enter 1 or 2: 1
 ```
 
-and the metrics question is last, on purpose:
+On an EC2 instance with a working role, the menu also prints
+`3) bedrock via this EC2 instance role — <role> @ <region>, no keys` and the prompt becomes
+`Enter 1, 2 or 3:`.
+
+The metrics question is last, on purpose:
 
 ```
 DuploCloud collects product usage metrics from this dev kit.

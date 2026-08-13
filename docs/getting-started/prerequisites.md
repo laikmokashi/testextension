@@ -1,6 +1,6 @@
 # 0. Prerequisites
 
-**What you'll do:** Confirm you have what this kit needs — Docker with Compose v2, Python 3, an LLM key,
+**What you'll do:** Confirm you have what this kit needs — Docker with Compose v2, Python 3, LLM access,
 a verified email address, and five free ports.
 
 **What you need first:** Nothing. This is the first page.
@@ -48,10 +48,11 @@ Debian/Ubuntu, `sudo apt-get install -y python3`; RHEL/Amazon Linux, `sudo dnf i
 
 `./run.sh` checks for this and for Docker before it does anything else, and names whatever is missing.
 
-## 0.3 An LLM key
+## 0.3 LLM access
 
 The agent needs a model to call. Pick one before you start — `./run.sh` asks for it and will not finish
-without it.
+without LLM access. On an EC2 instance whose role can invoke Bedrock, `./run.sh` offers that role and no
+keys are needed.
 
 | Provider | What you need | Where `./run.sh` puts it |
 | --- | --- | --- |
