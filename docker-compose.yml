@@ -33,7 +33,7 @@ services:
       - claude_sessions:/csessions
 
   duplo-ai-studio:
-    image: quay.io/duplocloud/duplo-ai-helpdesk-devkit:${STUDIO_TAG}
+    image: quay.io/duplocloud/duplo-ai-helpdesk:${STUDIO_TAG}
     # Feature-branch studio images are built amd64-only (arm64 is built on main). On Apple Silicon
     # this runs under emulation. Override per-arch by setting STUDIO_PLATFORM in .env.
     platform: ${STUDIO_PLATFORM:-linux/amd64}
