@@ -49,6 +49,7 @@ else — nothing writes or adopts that key, so your value stays put.
 | `Licensing__Token` | *(blank — `run.sh` fetches it)* | The license JWT, read by the studio as `Licensing:Token`. Blanking just this line is safe: the next run pulls the same license back down using the ids below. |
 | `LICENSE_TRIAL_UUID` | *(blank)* | The id of the trial request made for your address. `run.sh` polls it for the license and keeps it afterwards as the handle for re-fetching that same license. |
 | `LICENSE_RECOVERY_UUID` | *(blank)* | Set when your address already had a license and `run.sh` recovered it: the id of that recovery. A link you click after the script stops waiting still lands, because a later run resumes from this id. |
+| `LICENSE_REQUEST_EMAIL` | *(blank)* | The address the two ids above were requested for. Give `run.sh` a different admin email and it discards those ids rather than polling them — an id can only ever verify the one address, so this is how a mistyped email is recovered from. |
 
 Both `run.sh --reset` and `./stop.sh --wipe` leave the license alone — it is not stack state. Only
 `--reset-license` clears it, and it prints the JWT to stderr first because the server will not re-issue it.

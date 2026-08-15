@@ -108,6 +108,23 @@ Expected. Click the link DuploCloud emailed that address and the run continues o
 Nothing is lost. Click the link whenever it arrives, then re-run `./run.sh` — it resumes from the request id
 saved as `LICENSE_TRIAL_UUID` and no second email is sent. Check spam before assuming the email is missing.
 
+### The verification email never arrives (I mistyped my address)
+
+Waiting won't help: the link went to an address you can't read. Re-run with the address you meant.
+
+```
+./run.sh --email you@yourcompany.com
+==> Admin email changed (was you@yourcomapny.com, now you@yourcompany.com).
+    Discarding the pending license request for you@yourcomapny.com — it can only ever verify that address.
+==> Verifying your email address you@yourcompany.com…
+```
+
+`run.sh` stores the address a request was made for as `LICENSE_REQUEST_EMAIL`, next to the id itself. Give it a
+different admin email and the stale id is dropped instead of polled, so a new request goes to the corrected
+address. Nothing is given up — the typo'd request never had a license attached, and the one-trial-per-address
+rule applies per address, so the address you actually own still has its trial. You don't need
+`--reset-license` for this.
+
 A different wording means the server, not you, was the holdup:
 
 ```
