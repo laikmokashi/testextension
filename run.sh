@@ -19,6 +19,10 @@
 #                                  Combine with --reset, or use alone to re-license (with --license, or a
 #                                  new --email).
 #   ./run.sh --license <jwt>       use a license JWT you already have (no licensing call is made).
+#   ./run.sh --email <addr>        set/correct the admin email. While a license request is still unverified
+#                                  this also replaces it: the saved request id can only verify the address it
+#                                  was made for, so a new address drops it and requests again. That is how you
+#                                  get out of a mistyped email whose verification link you never received.
 #   ./run.sh --no-metrics          opt out of usage metrics (default is opted in); --metrics opts back in.
 #   ./run.sh --email a@b.com --password 'pw' --model anthropic --anthropic-key sk-... --no-metrics   non-interactive.
 #   ./run.sh --model bedrock --aws-access-key-id AKIA... --aws-secret-access-key ... [--aws-session-token ...] [--aws-region us-west-2]
@@ -469,6 +473,10 @@ license_wait_failed() { # rc id [trial|recovery]
          echo "    click the link you were emailed. Then do either:" >&2
          echo "      ./run.sh                  — picks the license up automatically (request id $2, saved in .env)" >&2
          echo "      ./run.sh --license <jwt>  — if you already have the JWT" >&2
+         # The other reason no link ever arrives, and the one the two lines above make worse by implying the
+         # only thing to do is wait. Say it here, on the screen the mistyped address actually produces.
+         echo "    Mistyped the address? ./run.sh --email <correct address> — that discards this request" >&2
+         echo "    and starts a new one. (Nothing was issued to $EMAIL, so nothing is given up.)" >&2
        else
          echo "  ✖ Gave up after $LICENSE_WAIT_HUMAN — $LICENSE_API never answered." >&2
          echo "    Nothing is lost: request id $2 is saved in .env. Re-run ./run.sh once you can reach it," >&2
@@ -583,6 +591,9 @@ if [ "$RESET_LICENSE" = 1 ]; then
     echo "    (Dropping the request id as well, so nothing re-fetches it.)" >&2
   setenv LICENSE_TRIAL_UUID ""
   setenv LICENSE_RECOVERY_UUID ""
+  # The address those ids were requested for goes with them: it exists only to say whose the ids are, so
+  # keeping it once they're gone would leave a stale name to compare a future request against.
+  setenv LICENSE_REQUEST_EMAIL ""
   # Replace rather than clear-then-maybe-write: the write in the license block is ~90 lines and one
   # email gate away, and a run that exits in between must not leave the key transiently empty.
   if [ -n "$F_LICENSE" ]; then setenv Licensing__Token "$F_LICENSE"; else setenv Licensing__Token ""; fi
@@ -607,6 +618,13 @@ BEDROCK_PROBE_MODEL="us.anthropic.claude-sonnet-4-6"
 echo "==> Setup (prompts appear only for values not already set)…"
 # Very basic email sanity check: name@example.com (no spaces).
 email_valid() { printf '%s' "$1" | grep -qE '^[^@[:space:]]+@[^@[:space:]]+\.[^@[:space:]]+$'; }
+# Same address? Compared case-insensitively: mail domains are case-insensitive and plenty of people
+# capitalise their own name, so Andy@Example.com and andy@example.com are one person. Only used to decide
+# whether a saved license request still belongs to the address in front of us — treating those two as
+# different would throw away a perfectly live request over nothing.
+email_eq() { # a b
+  [ "$(printf '%s' "$1" | tr '[:upper:]' '[:lower:]')" = "$(printf '%s' "$2" | tr '[:upper:]' '[:lower:]')" ]
+}
 EMAIL="$(resolve "$F_EMAIL" Authentication__LocalAdminEmail 'Admin email')"
 while ! email_valid "$EMAIL"; do
   echo "Invalid email address: '${EMAIL:-<empty>}' (expected name@example.com)." >&2
@@ -641,6 +659,25 @@ elif [ -n "$LIC" ]; then
   license_email_warn "$LIC"
   license_warn_expiry "$LIC"
 else
+  # Whose request is it? A saved id is only worth polling if it belongs to the address we are licensing.
+  # Mistype the email on the first run and that run stores an id for the typo'd address, the verification
+  # mail goes to an inbox nobody reads, and the run times out — leaving behind an id that every later run
+  # would re-poll, re-sending to the same wrong address. Correcting the address wouldn't help, not even with
+  # --email: the id outranks it. That is a dead end with no way out of the CLI, so close it here. If the
+  # address changed, these ids are handles to somebody else's request; drop them and license the address
+  # actually in front of us. Nothing is lost — an unverified request holds no license.
+  # Only when we have a stored address to compare against: a .env written by an older dev kit carries the ids
+  # and no LICENSE_REQUEST_EMAIL, and a resumable request must not be discarded merely because this upgrade
+  # can't tell whose it is. An issued license is never in scope — a non-empty Licensing__Token took the branch
+  # above, where license_email_warn flags a mismatched address without touching a token the server won't re-issue.
+  REQ_EMAIL="$(getenv LICENSE_REQUEST_EMAIL)"
+  if [ -n "$REQ_EMAIL" ] && ! email_eq "$REQ_EMAIL" "$EMAIL"; then
+    echo "==> Admin email changed (was $REQ_EMAIL, now $EMAIL)."
+    echo "    Discarding the pending license request for $REQ_EMAIL — it can only ever verify that address."
+    setenv LICENSE_TRIAL_UUID ""
+    setenv LICENSE_RECOVERY_UUID ""
+    setenv LICENSE_REQUEST_EMAIL ""
+  fi
   # Re-fetch first, request second. An id in .env already names a license — issued, or one click away from
   # it — and re-POSTing could only take the already-issued 400 and start the recovery dance over. This is
   # the whole story for a timed-out run, a Ctrl-C during the wait, and a hand-blanked Licensing__Token
@@ -710,6 +747,10 @@ if [ -z "$LIC" ]; then
         # timeout below must all leave behind something the next run can poll, because the address is
         # already spent and a second POST can only 400.
         setenv LICENSE_TRIAL_UUID "$MSG"
+        # And the address it was made for, written in the same breath so the two can never disagree. It is the
+        # only record of whose request this is: Authentication__LocalAdminEmail isn't written until ~120 lines
+        # below, and the timed-out run that makes this id matter exits long before reaching it.
+        setenv LICENSE_REQUEST_EMAIL "$EMAIL"
         # No "check your email" banner here: license_wait prints it on the first PENDING, which for a
         # just-created request is the very next line anyway. One copy, printed where it's known to be true.
         WRC=0; license_wait "$MSG" || WRC=$?
@@ -754,6 +795,7 @@ if [ -z "$LIC" ]; then
         # behind the id that lets the next run collect a link clicked late — without it the server would see
         # no pending recovery and email a second link the user has to click all over again.
         setenv LICENSE_RECOVERY_UUID "$RMSG"
+        setenv LICENSE_REQUEST_EMAIL "$EMAIL"      # same reason as the trial id above: the handle is per-address
         WRC=0; license_wait "$RMSG" recovery || WRC=$?
         [ "$WRC" = 0 ] || { license_wait_failed "$WRC" "$RMSG" recovery; exit 1; }
         break ;;

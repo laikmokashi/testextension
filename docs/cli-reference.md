@@ -121,9 +121,15 @@ combine.
 use it to switch providers cleanly. Blanking `AWS_REGION` is also what forces `bedrock-instance-role` to
 re-probe on the next run instead of reusing the region already in `.env`.
 
-`--reset-license` blanks the three licensing keys and nothing else: `Licensing__Token`,
-`LICENSE_TRIAL_UUID`, `LICENSE_RECOVERY_UUID`. Dropping the ids is what makes it irreversible from the CLI —
-they are the handles a later run would otherwise use to pull the same license back down.
+`--reset-license` blanks the four licensing keys and nothing else: `Licensing__Token`,
+`LICENSE_TRIAL_UUID`, `LICENSE_RECOVERY_UUID`, `LICENSE_REQUEST_EMAIL`. Dropping the ids is what makes it
+irreversible from the CLI — they are the handles a later run would otherwise use to pull the same license
+back down.
+
+You rarely need it to change address, though. `--email` alone is enough while a request is still unverified:
+a saved id can only verify the address it was made for, so giving a different admin email discards the id and
+requests afresh. That is the way out of a mistyped email — the one case where waiting for the link is futile,
+because it went somewhere you can't read.
 
 Your `extensions/` directory is **never** touched by any of these — it is only ever on disk.
 
