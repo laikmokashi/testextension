@@ -1,8 +1,7 @@
 # Code owners for the dev kit.
 #
-# ADVISORY, for now. Branch protection on `main` does not have "Require review from Code Owners"
-# enabled, so GitHub will request these reviews but will not block a merge on them. Enabling that
-# is a repository-settings change and is tracked separately — don't assume this file enforces.
+# ENFORCED. Branch protection on `main` has "Require review from Code Owners" enabled, so a
+# pull request touching these paths blocks until one of the owners below approves it.
 #
 # Syntax: https://docs.github.com/articles/about-code-owners
 

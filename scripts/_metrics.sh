@@ -17,7 +17,7 @@ metrics_conf_for() {
 # Never a TTY trap: under --non-interactive/-y, or with no TTY on stdin, take the default silently
 # instead of failing. Unlike the email/password prompts this value has a defensible default, so a
 # missing answer is not an error.
-# NOTE: DUPLOAI-2660 adds general TTY gating to run.sh's resolve(); fold this check into it there.
+# NOTE: when run.sh's resolve() grows general TTY gating, fold this check into it there.
 metrics_resolve() {
   local flagval="$1" envval="$2" noninteractive="$3" ans=""
   if [ -n "$flagval" ]; then printf '%s' "$flagval"; return; fi
