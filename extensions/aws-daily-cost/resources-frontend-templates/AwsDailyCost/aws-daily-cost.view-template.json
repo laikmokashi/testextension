@@ -1,0 +1,35 @@
+{
+  "resourceType": "AwsDailyCost",
+  "subType": "aws-daily-cost",
+  "label": "AWS Daily Cost",
+  "icon": "package-variant",
+  "idField": "id",
+  "groups": [
+    {
+      "name": "Summary",
+      "fields": [
+        { "type": "single", "key": "queryMonth", "label": "Month", "value": "result.queryMonth", "hideWhenEmpty": true },
+        { "type": "single", "key": "totalCost", "label": "Total Cost (USD)", "value": "result.totalCost", "hideWhenEmpty": true },
+        { "type": "single", "key": "currency", "label": "Currency", "value": "result.currency", "hideWhenEmpty": true }
+      ]
+    },
+    {
+      "name": "Daily Cost Breakdown",
+      "fields": [
+        {
+          "type": "table",
+          "key": "costEntries",
+          "label": "Cost Entries",
+          "value": "result.costEntries",
+          "hideWhenEmpty": true,
+          "columns": [
+            { "key": "date", "label": "Date" },
+            { "key": "group", "label": "Service / Account" },
+            { "key": "amount", "label": "Amount" },
+            { "key": "unit", "label": "Currency" }
+          ]
+        }
+      ]
+    }
+  ]
+}

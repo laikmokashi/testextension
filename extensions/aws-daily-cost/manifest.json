@@ -1,0 +1,56 @@
+{
+  "manifestVersion": "1.0",
+  "id": "duplo.extensions.awsdailycost",
+  "name": "AWS Daily Cost",
+  "version": "0.1.0",
+
+  "sdkVersion": "REPLACED_BY_SKILL_FROM_sdk-version_ENDPOINT",
+  "backend": {
+    "assemblyDir": "duplo.extensions.awsdailycost/0.1.0/backend",
+    "entryAssembly": "Duplo.Extension.AwsDailyCost.dll"
+  },
+
+  "resources": [
+    {
+      "ticketOriginType": "AwsDailyCost",
+      "restSegment": "extensions/aws-daily-costs",
+      "subType": "aws-daily-cost",
+      "archetype": "typed",
+      "registrar": "DevOpsResource",
+      "entityType": "Duplo.Extension.AwsDailyCost.AwsDailyCost",
+      "specType": "Duplo.Extension.AwsDailyCost.AwsDailyCostSpec",
+      "resultType": "Duplo.Extension.AwsDailyCost.AwsDailyCostResult",
+      "hooksType": "Duplo.Extension.AwsDailyCost.AwsDailyCostHooks",
+      "serviceType": "Duplo.Extension.AwsDailyCost.AwsDailyCostService"
+    }
+  ],
+
+  "frontend": {
+    "remote": {
+      "remoteName": "duploExtensionAwsDailyCost",
+      "remoteEntry": "/v1/aiservicedesk/extensions/duplo.extensions.awsdailycost/fe/remoteEntry.json",
+      "exposedModule": "./Extension",
+      "type": "module"
+    },
+    "menus": [
+      {
+        "id": "duplo.extensions.awsdailycost-cost-management",
+        "title": "Cost Management",
+        "type": "collapsible-section",
+        "children": [
+          {
+            "id": "duplo.extensions.awsdailycost-aws-daily-cost",
+            "title": "AWS Daily Cost",
+            "type": "item",
+            "matIcon": "package-variant",
+            "relativeUrl": "extensions/aws-daily-costs",
+            "order": 10
+          }
+        ]
+      }
+    ],
+    "routes": [
+      { "path": "extensions/aws-daily-costs", "resourceType": "AwsDailyCost", "subType": "aws-daily-cost" }
+    ]
+  }
+}

@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <UseAppHost>false</UseAppHost>
+    <IsPackable>false</IsPackable>
+    <DuploSdkVersion Condition="'$(DuploSdkVersion)' == ''">1.0.0</DuploSdkVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Duplocloud.AiHelpdesk.Sdk" Version="[$(DuploSdkVersion)]" ExcludeAssets="runtime" />
+    <!-- Cost Explorer client — not in SDK closure; ship this DLL in the bundle -->
+    <PackageReference Include="AWSSDK.CostExplorer" Version="4.*" />
+  </ItemGroup>
+
+</Project>
