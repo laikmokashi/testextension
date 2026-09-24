@@ -1,0 +1,56 @@
+{
+  "manifestVersion": "1.0",
+  "id": "duplo.extensions.awsresourcelist",
+  "name": "AWS Resource List",
+  "version": "0.1.0",
+
+  "sdkVersion": "REPLACED_BY_SKILL_FROM_sdk-version_ENDPOINT",
+  "backend": {
+    "assemblyDir": "duplo.extensions.awsresourcelist/0.1.0/backend",
+    "entryAssembly": "Duplo.Extension.AwsResourceList.dll"
+  },
+
+  "resources": [
+    {
+      "ticketOriginType": "AwsResourceList",
+      "restSegment": "extensions/aws-resource-lists",
+      "subType": "aws-resource-list",
+      "archetype": "typed",
+      "registrar": "DevOpsResource",
+      "entityType": "Duplo.Extension.AwsResourceList.AwsResourceList",
+      "specType": "Duplo.Extension.AwsResourceList.AwsResourceListSpec",
+      "resultType": "Duplo.Extension.AwsResourceList.AwsResourceListResult",
+      "hooksType": "Duplo.Extension.AwsResourceList.AwsResourceListHooks",
+      "serviceType": "Duplo.Extension.AwsResourceList.AwsResourceListService"
+    }
+  ],
+
+  "frontend": {
+    "remote": {
+      "remoteName": "duploExtensionAwsResourceList",
+      "remoteEntry": "/v1/aiservicedesk/extensions/duplo.extensions.awsresourcelist/fe/remoteEntry.json",
+      "exposedModule": "./Extension",
+      "type": "module"
+    },
+    "menus": [
+      {
+        "id": "duplo.extensions.awsresourcelist-aws-resources",
+        "title": "AWS Resources",
+        "type": "collapsible-section",
+        "children": [
+          {
+            "id": "duplo.extensions.awsresourcelist-ec2-instances",
+            "title": "EC2 Instances",
+            "type": "item",
+            "matIcon": "server",
+            "relativeUrl": "extensions/aws-resource-lists",
+            "order": 10
+          }
+        ]
+      }
+    ],
+    "routes": [
+      { "path": "extensions/aws-resource-lists", "resourceType": "AwsResourceList", "subType": "aws-resource-list" }
+    ]
+  }
+}
