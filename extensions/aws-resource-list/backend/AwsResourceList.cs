@@ -62,10 +62,7 @@ public class AwsResourceListService : ResourceServiceBase<AwsResourceList, AwsRe
         _svcLogger = logger;
     }
 
-    // No provisioning — the resource is just a saved view configuration.
-    protected override bool IsProvisioningNeeded(AwsResourceList entity) => false;
-
-    // On every GET: call EC2 DescribeInstances and inject live state into Result (never persisted).
+    // Agent-provisioned: platform fires a skill ticket on create; EnrichResultAsync adds live state on every GET.
     protected override async Task EnrichResultAsync(AwsResourceList entity, CancellationToken ct)
     {
         var region = entity.Spec?.Region;

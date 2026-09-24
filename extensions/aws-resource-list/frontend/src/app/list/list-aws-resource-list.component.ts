@@ -31,6 +31,9 @@ import { StatusBadgeComponent } from '../shared/status-badge.component';
                 <a ngbDropdownItem (click)="edit(row)">
                   <i data-feather="edit" class="mr-50"></i><span>Edit</span>
                 </a>
+                <a ngbDropdownItem (click)="track(row)">
+                  <i data-feather="activity" class="mr-50"></i><span>Track Provisioning</span>
+                </a>
               </div>
             </div>
           </ng-template>
@@ -99,4 +102,11 @@ export class ListAwsResourceListComponent implements OnInit {
   protected add(): void { this.router.navigate(['add'], { relativeTo: this.route }); }
   protected view(r: AwsResourceList): void { this.router.navigate(['view', r.id], { relativeTo: this.route }); }
   protected edit(r: AwsResourceList): void { this.router.navigate(['edit', r.id], { relativeTo: this.route }); }
+
+  protected track(r: AwsResourceList): void {
+    this.svc.ticketName(r.id).subscribe(name => {
+      if (!name) return;
+      this.router.navigate(['/ai/service-desk', this.svc.workspaceId(), 'tickets', 'chat', name]);
+    });
+  }
 }

@@ -39,6 +39,7 @@ const AWS_RESOURCE_LIST_VIEW_TEMPLATE: any = {
 
           <ng-template #actions>
             <a ngbDropdownItem (click)="edit()"><i data-feather="edit"></i> Edit</a>
+            <a ngbDropdownItem (click)="track()"><i data-feather="terminal"></i> View Provisioning Ticket</a>
           </ng-template>
 
           <ng-template #headerFilter>
@@ -87,6 +88,9 @@ const AWS_RESOURCE_LIST_VIEW_TEMPLATE: any = {
               <span class="font-small-3 text-muted mr-75 text-truncate" style="max-width:60%"
                     [title]="it.subStatus">{{ it.subStatus }}</span>
             }
+            <button class="btn btn-primary btn-sm" (click)="track()" [disabled]="tracking()">
+              <i data-feather="zap" class="mr-50"></i> Track Provisioning Status
+            </button>
           </div>
         </section>
       </view-with-sidecards>
@@ -103,6 +107,7 @@ export class ViewAwsResourceListComponent implements OnInit {
   protected readonly item = signal<AwsResourceList | undefined>(undefined);
   protected readonly viewTemplate = signal<any>(null);
   protected readonly activePanel = signal<'spec' | 'result'>('result');
+  protected readonly tracking = signal(false);
   protected readonly panelFilters = [
     new FlatStatusFilter({ name: 'spec', label: 'Spec' }),
     new FlatStatusFilter({ name: 'result', label: 'Result' }),
@@ -117,5 +122,19 @@ export class ViewAwsResourceListComponent implements OnInit {
   protected edit(): void {
     const it = this.item();
     if (it) this.router.navigate(['../..', 'edit', it.id], { relativeTo: this.route });
+  }
+
+  protected track(): void {
+    const it = this.item();
+    if (!it) return;
+    this.tracking.set(true);
+    this.svc.ticketName(it.id).subscribe({
+      next: name => {
+        this.tracking.set(false);
+        if (!name) return;
+        this.router.navigate(['/ai/service-desk', this.svc.workspaceId(), 'tickets', 'chat', name]);
+      },
+      error: () => this.tracking.set(false),
+    });
   }
 }

@@ -50,7 +50,7 @@ import { AwsResourceListService } from '../aws-resource-list.service';
                 <div class="d-flex justify-content-end mt-1">
                   <button type="button" class="btn btn-outline-secondary mr-1" (click)="cancel()">Cancel</button>
                   <button type="submit" class="btn btn-primary" [disabled]="saving()">
-                    {{ isEdit ? 'Save' : 'Create' }}
+                    {{ isEdit ? 'Save' : 'Provision' }}
                   </button>
                 </div>
               </div>

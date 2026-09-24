@@ -63,6 +63,12 @@ export class AwsResourceListService {
     return this.http.patch(`${this.base()}/${id}`, { spec }).pipe(map((r: any) => this.unwrap(r)));
   }
 
+  ticketName(id: string): Observable<string | null> {
+    const url = `/v1/aiservicedesk/tickets/${this.workspaceId()}/origin-context`
+      + `?type=${ORIGIN_TYPE}&id=${id}&subType=${SUB_TYPE}`;
+    return this.http.get(url).pipe(map((r: any) => this.unwrap(r)?.name ?? null));
+  }
+
   getViewTemplate(type: string = ORIGIN_TYPE, subType: string = SUB_TYPE): Observable<any | null> {
     const q = `type=${encodeURIComponent(type)}&subType=${encodeURIComponent(subType)}`;
     return this.http.get(`${this.base()}/view-template?${q}`).pipe(

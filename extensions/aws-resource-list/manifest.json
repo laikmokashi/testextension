@@ -2,11 +2,11 @@
   "manifestVersion": "1.0",
   "id": "duplo.extensions.awsresourcelist",
   "name": "AWS Resource List",
-  "version": "0.1.0",
+  "version": "0.2.0",
 
   "sdkVersion": "REPLACED_BY_SKILL_FROM_sdk-version_ENDPOINT",
   "backend": {
-    "assemblyDir": "duplo.extensions.awsresourcelist/0.1.0/backend",
+    "assemblyDir": "duplo.extensions.awsresourcelist/0.2.0/backend",
     "entryAssembly": "Duplo.Extension.AwsResourceList.dll"
   },
 
@@ -23,6 +23,13 @@
       "hooksType": "Duplo.Extension.AwsResourceList.AwsResourceListHooks",
       "serviceType": "Duplo.Extension.AwsResourceList.AwsResourceListService"
     }
+  ],
+
+  "skills": [
+    { "folder": "duplo.extensions.awsresourcelist/0.2.0/skills/provision-aws-resource-list", "isBuiltIn": true }
+  ],
+  "skillMappings": [
+    { "originType": "AwsResourceList", "subType": "aws-resource-list", "skillNames": ["provision-aws-resource-list"], "timeout": { "provision": 300, "deprovision": 120 } }
   ],
 
   "frontend": {
